@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # ruby test_regex.rb
 
 # 以下のコードは各パターンが動作しているか確認するサンプルです。
@@ -6,19 +8,19 @@
 # against a set of test texts. Here's a breakdown of what the code does:
 
 TEST_TEXTS = [
-  "abc",
+  'abc',
   "abc\n",
-  "abcd",
-  "Price: 100 yen",
-  "color", "colour",
-  "hello",
-  "foo", "foobar",
+  'abcd',
+  'Price: 100 yen',
+  'color', 'colour',
+  'hello',
+  'foo', 'foobar',
   "foo\nbar",
-  "2024-12-14",
-  "abc def",
-  "$250",
-  "12-12"
-]
+  '2024-12-14',
+  'abc def',
+  '$250',
+  '12-12'
+].freeze
 
 PATTERNS = [
   /a.b/,
@@ -52,7 +54,7 @@ PATTERNS = [
   /foo(?!bar)/,
   /(?<=\$)\d+/,
   /(?<!\$)\d+/
-]
+].freeze
 
 PATTERNS.each do |pat|
   puts "Pattern: #{pat}"

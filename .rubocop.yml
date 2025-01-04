@@ -1,0 +1,23 @@
+AllCops:
+  Exclude:
+    - "Gemfile"
+    - "Gemfile.lock"
+    - "db_schema.rb"
+    - "set_application_settings.rb"
+
+  TargetRubyVersion: 3.0.6
+
+Metrics/ClassLength:
+  Max: 200
+
+Metrics/MethodLength:
+  Max: 25
+
+Metrics/AbcSize:
+  Max: 25
+
+Lint/MixedRegexpCaptureTypes:
+  Enabled: false
+
+Style/Documentation:
+  Enabled: false
