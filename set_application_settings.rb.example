@@ -1,0 +1,50 @@
+# 不要な場合はメソッドと定数を削除する
+module SetApplicationSettings
+  def self.set_application_name
+    'XXXXXX'
+  end
+
+  def self.default_test_user
+    'YYYYYYY'
+  end
+
+  # すべての機能名を取得
+  def self.set_function_name_hash
+    {
+      'dashboards' => 'ダッシュボード',
+      'users' => 'ユーザー'
+    }
+  end
+
+  # 画面左のメニューからアクセスが可能かどうかのハッシュを取得
+  def self.set_function_left_menu_hash
+    {
+      'dashboards' => true
+      'users' => true
+    }
+  end
+
+  # 顧客閲覧画面のタブからアクセスが可能かどうかのハッシュを取得
+  def self.set_function_customer_tab_hash
+    {
+      'dashboards' => false,
+      'users' => false
+    }
+  end
+
+  # 設置先閲覧画面のタブからアクセスが可能かどうかのハッシュを取得
+  def self.set_function_place_tab_hash
+    {
+      'dashboards' => false,
+      'users' => false
+    }
+  end
+
+  # ユーザータイプの配列を取得
+  def self.set_user_type_array
+    [
+      { admin: '管理者' }
+      { normal: '一般ユーザ' }
+    ]
+  end
+end

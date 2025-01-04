@@ -1,0 +1,7 @@
+permissions:
+  admin:
+    dashboards: [read]
+    users: [read, write, delete, import]
+  normal
+    dashboards: [read]
+    users: [read]
