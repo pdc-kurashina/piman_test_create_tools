@@ -1,4 +1,5 @@
 # test_create_tools
+settings.yml
 output.csv
 set_application_settings.rb
 
