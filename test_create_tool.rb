@@ -190,7 +190,7 @@ class CreateTest
     csv << [
       '削除',
       '削除確認モーダル表示',
-      "#{APP_NAME}nに#{DEFAULT_TEST_USER}でログインしていること。#{FUNCTION_NAME_HASH[function_name]}の編集画面へ遷移していること。",
+      "#{APP_NAME}に#{DEFAULT_TEST_USER}でログインしていること。#{FUNCTION_NAME_HASH[function_name]}の編集画面へ遷移していること。",
       '',
       "1. 「削除」ボタンをクリックする。",
       "1. 削除確認モーダルが表示されること。",
@@ -199,7 +199,7 @@ class CreateTest
     csv << [
       '削除',
       '削除キャンセル',
-      "#{APP_NAME}nに#{DEFAULT_TEST_USER}でログインしていること。#{FUNCTION_NAME_HASH[function_name]}の編集画面へ遷移していること。",
+      "#{APP_NAME}に#{DEFAULT_TEST_USER}でログインしていること。#{FUNCTION_NAME_HASH[function_name]}の編集画面へ遷移していること。",
       '',
       "1. 「削除」ボタンをクリックする。<br>2. 「キャンセル」ボタンをクリックする。<br>3. 「キャンセル」ボタンを2回クリックする。",
       "1. 削除確認モーダルが表示されること。<br>2. 削除確認モーダルが閉じること。<br>3. #{FUNCTION_NAME_HASH[function_name]}一覧画面へ遷移すること。このとき、削除対象のデータが存在していること。",
@@ -208,7 +208,7 @@ class CreateTest
     csv << [
       '削除',
       '削除',
-      "#{APP_NAME}nに#{DEFAULT_TEST_USER}でログインしていること。#{FUNCTION_NAME_HASH[function_name]}の編集画面へ遷移していること。",
+      "#{APP_NAME}に#{DEFAULT_TEST_USER}でログインしていること。#{FUNCTION_NAME_HASH[function_name]}の編集画面へ遷移していること。",
       '',
       "1. 「削除」ボタンをクリックする。<br>2. 「削除」ボタンをクリックする。",
       "1. 削除確認モーダルが表示されること。<br>2. 削除が実行され、#{FUNCTION_NAME_HASH[function_name]}一覧画面へ遷移すること。このとき、削除対象のデータが存在していないこと。",
