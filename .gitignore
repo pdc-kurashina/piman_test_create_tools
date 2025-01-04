@@ -1,1 +1,7 @@
+# output files
 output.csv
+schema_tables.md
+
+# source files
+settings.yml
+db_schema.rb
