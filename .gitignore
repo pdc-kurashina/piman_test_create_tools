@@ -2,6 +2,7 @@
 config/create_test_settings/settings.yml
 output.csv
 config/create_test_settings/set_application_settings.rb
+config/create_test_settings/form_items.yml
 
 # csv_to_html
 output.html
