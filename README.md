@@ -10,9 +10,11 @@
 
 ## 試験仕様書作成スクリプト
 
+自動で試験仕様書を作成するためのスクリプトです。
+
 ### 準備
 
-1. `touch settings.yml`で`settings.yml`を新規作成します。
+1. `config/create_test_settings/`ディレクトリに`touch settings.yml`で`settings.yml`を新規作成します。
 2. 以下のような構成でymlファイルに権限情報を記述します。（`settings.yml.example`を参考にしてください。）
 
 ```yml
@@ -24,7 +26,7 @@ permissions:    # 固定
     settings: []
 ```
 
-3. `touch set_application_settings.rb`で`set_application_settings.rb`を新規作成します。
+3. `config/create_test_settings/`ディレクトリに`touch set_application_settings.rb`で`set_application_settings.rb`を新規作成します。
 4. `set_application_settings.rb.example.rb.example`を参考に、「アプリケーションの名前」「デフォルトテストユーザ」「機能名」「ユーザ種別」などを設定します。
 5. `setting_test_create_tool.rb`を開いて、ファイルのパスが正しいか確認します。
 
@@ -33,9 +35,10 @@ permissions:    # 固定
 1. 以下のコマンドを実行します。
 
 ```sh
-thor tool:test_create_tool --f <機能名> --d <画面名> --v <バージョン>
+thor tool:test_create_tool --f <機能名> --d <画面名> --v <バージョン> --w <yes or y or true>
 
-# 例: thor tool:test_create_tool --f 'users' --d '一覧' --v 'v2.5.7'
+# 例: thor tool:test_create_tool --f 'users' --d '一覧' --v 'v2.5.7' --w yes
+# --w で yes/y/true のいずれかを指定すると、HTML形式でも試験仕様書が出力されます。
 ```
 
 もしくは
@@ -44,6 +47,16 @@ thor tool:test_create_tool --f <機能名> --d <画面名> --v <バージョン>
 ruby <スクリプトのあるパス>/test_create_tool.rb --f <機能名> --d <画面名> --v <バージョン>
 
 # 例: ruby test_create_tool.rb --f 'users' --d '一覧' --v 'v2.5.7'
+```
+
+## CSV to HTML
+
+上記で作成した試験仕様書をHTML形式で出力するスクリプトを実行します。
+
+### コマンド実行
+
+```sh
+thor tool:csv_to_html
 ```
 
 ## FROM DBスキーマ TO マークダウン

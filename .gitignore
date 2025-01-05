@@ -3,6 +3,9 @@ config/create_test_settings/settings.yml
 output.csv
 config/create_test_settings/set_application_settings.rb
 
+# csv_to_html
+output.html
+
 # create_markdown_schema
 config/create_markdown_schema_settings/db_schema.rb
 schema_tables.md

@@ -55,3 +55,5 @@ ja:
     close_delete_confirm_modal: "%{num}. 削除確認モーダルが閉じること。"
     delete_cancel: "%{num}. %{function_name}一覧画面へ遷移すること。この時、削除対象のデータ存在していること。"
     delete_success: "%{num}. 削除が実行され、%{function_name}一覧画面へ遷移すること。この時、削除対象のデータが存在していないこと。"
+  html_title: "試験仕様書"
+  convert_success: "%{html_file}を作成しました。"

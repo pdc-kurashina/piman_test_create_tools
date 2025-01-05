@@ -6,21 +6,15 @@ require 'i18n'
 
 require './config/create_test_settings/setting_test_create_tool'
 require './config/create_test_settings/set_application_settings'
-
-# 国際化の設定を行うクラス
-class SetI18n
-  def self.set_i18n
-    I18n.load_path << Dir["#{File.expand_path('config/locales')}/*.yml"]
-    I18n.default_locale = :ja
-  end
-end
-
-SetI18n.set_i18n unless I18n.default_locale == :ja
+require './config/locales/initialize_i18n'
 
 # テスト作成ツールの設定を行うクラス
 class SetCreateTestToolSetting
   include SettingTestCreateTool
   include SetApplicationSettings
+  include SettingI18n
+
+  SettingI18n::SetI18n.execute
 
   # ファイルパスを取得
   paths = SettingTestCreateTool.set_paths
