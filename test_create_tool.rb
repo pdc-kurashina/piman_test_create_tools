@@ -2,11 +2,22 @@
 
 require 'yaml'
 require 'csv'
-require 'optparse'
+require 'i18n'
 
-require './setting_test_create_tool'
-require './set_application_settings'
+require './config/create_test_settings/setting_test_create_tool'
+require './config/create_test_settings/set_application_settings'
 
+# 国際化の設定を行うクラス
+class SetI18n
+  def self.set_i18n
+    I18n.load_path << Dir["#{File.expand_path('config/locales')}/*.yml"]
+    I18n.default_locale = :ja
+  end
+end
+
+SetI18n.set_i18n unless I18n.default_locale == :ja
+
+# テスト作成ツールの設定を行うクラス
 class SetCreateTestToolSetting
   include SettingTestCreateTool
   include SetApplicationSettings
@@ -53,6 +64,8 @@ class CreateTest
 
     menu_tab_array = get_menu_tab_array(option_params)
 
+    fixed_precondition_text = generate_fixed_precondition_text(option_params)
+
     csv_headers = %w[セクション タイトル 前提条件 備考 手順 期待する結果 対応バージョン]
     CSV.open(csv_path, 'w', write_headers: true, headers: csv_headers) do |csv|
       menu_tab_array.each_with_index do |is_creatable, order|
@@ -62,17 +75,12 @@ class CreateTest
           csv << display_test_spec(user_type, option_params, menu_tab_array, order, permissions_data)
         end
 
-        precondition_text = [
-          "#{APP_NAME}に#{DEFAULT_TEST_USER}でログインしていること。",
-          "#{FUNCTION_NAME_HASH[option_params[0]]}の#{option_params[1]}画面へ遷移していること。"
-        ]
-        fixed_precondition_text = combine_text(precondition_text)
         case option_params[1]
-        when '新規登録'
+        when I18n.t('display.new')
           csv << new_test_spec(option_params, fixed_precondition_text)
-        when '複製'
+        when I18n.t('display.duplicate')
           csv << duplicate_test_spec(option_params, fixed_precondition_text)
-        when '編集'
+        when I18n.t('display.edit')
           csv << edit_test_spec(option_params, fixed_precondition_text)
           generate_destroy(csv, option_params[0], option_params[2])
         end
@@ -104,9 +112,18 @@ class CreateTest
     hash[function_name]
   end
 
+  def generate_fixed_precondition_text(option_params)
+    precondition_text = [
+      I18n.t('precondition.login', app_name: APP_NAME, test_user: DEFAULT_TEST_USER),
+      I18n.t('precondition.display', function_name: FUNCTION_NAME_HASH[option_params[0]],
+                                     display_name: option_params[1])
+    ]
+    combine_text(precondition_text)
+  end
+
   def display_test_spec(user_type, option_params, menu_tab_array, order, permissions_data)
     [
-      '表示', user_type.values.first,
+      I18n.t('section.display'), user_type.values.first,
       generate_precondition(user_type, option_params[0], option_params[1], menu_tab_array, order), '',
       generate_step(option_params[0], option_params[1], menu_tab_array, order),
       generate_result(option_params[0], option_params[1],
@@ -117,46 +134,54 @@ class CreateTest
 
   def new_test_spec(option_params, fixed_precondition_text)
     [
-      option_params[1], '登録', "#{fixed_precondition_text}備考の表をもとにデータを登録していること。", '',
-      combine_text(['1. 備考の表に沿ってデータを入力し、「登録」ボタンをクリックする。', '2. 「キャンセル」ボタンをクリックする。']),
-      combine_text(["1. 正常に登録され、#{FUNCTION_NAME_HASH[option_params[0]]}閲覧画面へ遷移すること。このとき、入力した内容が表示されていること。",
-                    "2. #{FUNCTION_NAME_HASH[option_params[0]]}一覧画面へ遷移すること。このとき、登録したデータが一覧テーブルに表示されていること。"]),
+      option_params[1], I18n.t('title.create'),
+      "#{fixed_precondition_text}#{I18n.t('precondition.before_create_data')}", '',
+      combine_text([I18n.t('step.input', num: '1', button_name: I18n.t('button.create')),
+                    I18n.t('step.click_button', num: '2', button_name: I18n.t('button.cancel'))]),
+      combine_text([I18n.t('result.input_success', num: '1', button_name: I18n.t('button.create'),
+                                                   function_name: FUNCTION_NAME_HASH[option_params[0]]),
+                    I18n.t('result.create_input_check', num: '2',
+                                                        function_name: FUNCTION_NAME_HASH[option_params[0]])]),
       option_params[2]
     ]
   end
 
   def duplicate_test_spec(option_params, fixed_precondition_text)
     [
-      option_params[1], '登録', "#{fixed_precondition_text}備考の表をもとにデータを登録していること。", '',
-      combine_text(['1. 備考の表に沿ってデータを入力し、「複製」ボタンをクリックする。', '2. 「キャンセル」ボタンをクリックする。']),
-      combine_text(
-        [
-          "1. 正常に登録され、#{FUNCTION_NAME_HASH[option_params[0]]}閲覧画面へ遷移すること。このとき、入力した内容が表示されていること。",
-          "2. #{FUNCTION_NAME_HASH[option_params[0]]}一覧画面へ遷移すること。このとき、複製元のデータと複製したデータが一覧テーブルに表示されていること。"
-        ]
-      ),
+      option_params[1], I18n.t('title.create'),
+      "#{fixed_precondition_text}#{I18n.t('precondition.before_create_data')}", '',
+      combine_text([I18n.t('step.input', num: '1', button_name: I18n.t('button.duplicate')),
+                    I18n.t('step.click_button', num: '2', button_name: I18n.t('button.cancel'))]),
+      combine_text([I18n.t('result.input_success', num: '1', button_name: I18n.t('button.create'),
+                                                   function_name: FUNCTION_NAME_HASH[option_params[0]]),
+                    I18n.t('result.duplicate_input_check', num: '2',
+                                                           function_name: FUNCTION_NAME_HASH[option_params[0]])]),
       option_params[2]
     ]
   end
 
   def edit_test_spec(option_params, fixed_precondition_text)
     [
-      option_params[1], '更新', "#{fixed_precondition_text}備考の表をもとにデータを登録していること。", '',
-      combine_text(['1. 備考の表に沿ってデータを入力し、「更新」ボタンをクリックする。', '2. 「キャンセル」ボタンをクリックする。']),
-      combine_text(["1. 正常に登録され、#{FUNCTION_NAME_HASH[option_params[0]]}閲覧画面へ遷移すること。このとき、入力した内容が表示されていること。",
-                    "2. #{FUNCTION_NAME_HASH[option_params[0]]}一覧画面へ遷移すること。このとき、更新したデータが一覧テーブルに表示されていること。"]),
+      option_params[1], I18n.t('title.update'),
+      "#{fixed_precondition_text}#{I18n.t('precondition.before_create_data')}", '',
+      combine_text([I18n.t('step.input', num: '1', button_name: I18n.t('button.update')),
+                    I18n.t('step.click_button', num: '2', button_name: I18n.t('button.cancel'))]),
+      combine_text([I18n.t('result.input_success', num: '1', button_name: I18n.t('button.update'),
+                                                   function_name: FUNCTION_NAME_HASH[option_params[0]]),
+                    I18n.t('result.update_input_check', num: '2',
+                                                        function_name: FUNCTION_NAME_HASH[option_params[0]])]),
       option_params[2]
     ]
   end
 
   # テスト仕様書の前提条件を生成するメソッド（表示の場合）
   def generate_precondition(user_type, function_name, display_name, menu_tab_array, order)
-    fixed_precondition_text = "#{APP_NAME}に#{user_type.values.first}でログインしていること。"
+    fixed_precondition_text = I18n.t('precondition.login', app_name: APP_NAME, test_user: user_type.values.first)
     precondition_display_text = "#{FUNCTION_NAME_HASH[function_name]}の#{precondition_display(display_name)}に遷移していること。"
     case display_name
-    when '一覧'
+    when I18n.t('display.index')
       precondition_index(order, menu_tab_array, fixed_precondition_text, precondition_display_text)
-    when '新規登録', '複製', '編集'
+    when I18n.t('display.new'), I18n.t('display.duplicate'), I18n.t('display.edit')
       precondition_other_than_index(order, menu_tab_array, fixed_precondition_text, precondition_display_text)
     end
   end
@@ -165,40 +190,42 @@ class CreateTest
     if order.zero? && menu_tab_array[0]
       "#{fixed_precondition_text}#{precondition_display_text}"
     elsif order == 1 && menu_tab_array[1]
-      "#{fixed_precondition_text}顧客閲覧画面に遷移していること。"
+      "#{fixed_precondition_text}#{I18n.t('precondition.moved_customer_show')}"
     elsif order == 2 && menu_tab_array[2]
-      "#{fixed_precondition_text}設置先閲覧画面に遷移していること。"
+      "#{fixed_precondition_text}#{I18n.t('precondition.moved_place_show')}"
     end
   end
 
   def precondition_other_than_index(order, menu_tab_array, fixed_precondition_text, precondition_display_text)
+    base_text = fixed_precondition_text
     if order.zero? && menu_tab_array[0]
-      "#{fixed_precondition_text}#{precondition_display_text}備考の表をもとにデータを登録していること。"
+      base_text += "#{precondition_display_text}#{I18n.t('precondition.before_create_data')}"
     elsif order == 1 && menu_tab_array[1]
-      "#{fixed_precondition_text}顧客閲覧画面に遷移していること。備考の表をもとにデータを登録していること。"
+      base_text += "#{I18n.t('precondition.moved_customer_show')}#{I18n.t('precondition.before_create_data')}"
     elsif order == 2 && menu_tab_array[2]
-      "#{fixed_precondition_text}設置先閲覧画面に遷移していること。備考の表をもとにデータを登録していること。"
+      base_text += "#{I18n.t('precondition.moved_place_show')}#{I18n.t('precondition.before_create_data')}"
     end
+    base_text
   end
 
   # テスト仕様書の前提条件で予めどこへ遷移しているべきかを返すメソッド
   def precondition_display(display_name)
     case display_name
-    when '一覧'
-      'ダッシュボード'
-    when '新規登録', '複製', '閲覧'
-      '一覧画面'
-    when '編集'
-      '閲覧'
+    when I18n.t('display.index')
+      I18n.t('display.dashboard')
+    when I18n.t('display.new'), I18n.t('display.duplicate'), I18n.t('display.show')
+      I18n.t('display.index')
+    when I18n.t('display.edit')
+      I18n.t('display.show')
     end
   end
 
   # テスト仕様書の手順を生成するメソッド
   def generate_step(function_name, display_name, menu_tab_array, order)
     case display_name
-    when '閲覧'
+    when I18n.t('display.show')
       step_for_view
-    when '新規登録', '複製', '編集'
+    when I18n.t('display.new'), I18n.t('display.duplicate'), I18n.t('display.edit')
       step_for_click_button(display_name)
     else
       # display_name が「閲覧」「新規登録」「複製」「編集」以外の場合
@@ -212,28 +239,38 @@ class CreateTest
   end
 
   def step_for_view
-    '1. 予め登録しておいたデータの行をクリックする。'
+    I18n.t('step.click_record', num: '1')
   end
 
   def step_for_click_button(display_name)
-    "1. 「#{display_name}」ボタンをクリックする。"
+    I18n.t('step.click_button', num: '1', button_name: display_name)
   end
 
   def step_for_left_menu(function_name)
-    "1. 左メニューの「#{FUNCTION_NAME_HASH[function_name]}」をクリックする。"
+    I18n.t('step.click_left_menu', num: '1', function_name: FUNCTION_NAME_HASH[function_name])
   end
 
   def step_for_tab_click(function_name)
-    "1. 「#{FUNCTION_NAME_HASH[function_name]}」タブをクリックする。"
+    I18n.t('step.click_tab_menu', num: '1', function_name: FUNCTION_NAME_HASH[function_name])
   end
 
   # テスト仕様書の期待する結果を生成するメソッド
   def generate_result(function_name, display_name, permissions)
-    return "1. 左メニューに#{FUNCTION_NAME_HASH[function_name]}が存在していないこと。" if display_name == '一覧' && !readable?(permissions)
+    if display_name == '一覧' && !readable?(permissions)
+      return I18n.t('result.not_left_menu', num: '1',
+                                            function_name: FUNCTION_NAME_HASH[function_name])
+    end
 
-    return '1. 「新規登録」ボタンが存在していないこと。' if %w[新規登録 複製 編集].include?(display_name) && !writable?(permissions)
+    if [I18n.t('display.new'), I18n.t('display.duplicate')].include?(display_name) && !writable?(permissions)
+      return I18n.t('result.not_exist_button', num: '1', button_name: I18n.t('button.new'))
+    end
 
-    "1. #{FUNCTION_NAME_HASH[function_name]}#{display_name}画面へ遷移すること。"
+    if display_name == I18n.t('display.edit') && !writable?(permissions)
+      return I18n.t('result.not_exist_button', num: '1', button_name: I18n.t('button.edit'))
+    end
+
+    I18n.t('result.move_display', num: '1', function_name: FUNCTION_NAME_HASH[function_name],
+                                  display_name: display_name)
   end
 
   def readable?(permissions)
@@ -246,26 +283,44 @@ class CreateTest
 
   # 編集画面での削除の試験を生成するメソッド
   def generate_destroy(csv, function_name, version)
-    precondition_text =
-      "#{APP_NAME}に#{DEFAULT_TEST_USER}でログインしていること。#{FUNCTION_NAME_HASH[function_name]}の編集画面へ遷移していること。"
-    csv << [
-      '削除', '削除確認モーダル表示', precondition_text, '',
-      combine_text(['1. 「削除」ボタンをクリックする。']),
-      combine_text(['1. 削除確認モーダルが表示されること。']),
+    precondition_text = [
+      I18n.t('precondition.login', app_name: APP_NAME, test_user: DEFAULT_TEST_USER),
+      I18n.t('precondition.display', function_name: FUNCTION_NAME_HASH[function_name],
+                                     display_name: I18n.t('display.edit'))
+    ]
+    fixed_precondition_text = combine_text(precondition_text)
+    csv << add_delete_confirm_modal(fixed_precondition_text, version)
+    csv << add_delete_cancel(function_name, fixed_precondition_text, version)
+    csv << add_delete_execute(function_name, fixed_precondition_text, version)
+  end
+
+  def add_delete_confirm_modal(fixed_precondition_text, version)
+    [
+      I18n.t('section.delete'), I18n.t('title.delete_confirm_modal'), fixed_precondition_text, '',
+      combine_text([I18n.t('step.click_delete_button', num: '1')]),
+      combine_text([I18n.t('result.open_delete_confirm_modal', num: '1')]),
       version
     ]
-    csv << [
-      '削除', '削除キャンセル', precondition_text, '',
-      combine_text(['1. 「削除」ボタンをクリックする。', '2. 「キャンセル」ボタンをクリックする。', '3. 「キャンセル」ボタンを2回クリックする。']),
-      combine_text(['1. 削除確認モーダルが表示されること。', '2. 削除確認モーダルが閉じること。',
-                    "3. #{FUNCTION_NAME_HASH[function_name]}一覧画面へ遷移すること。このとき、削除対象のデータが存在していること。"]),
+  end
+
+  def add_delete_cancel(function_name, fixed_precondition_text, version)
+    [
+      I18n.t('section.delete'), I18n.t('title.delete_cancel'), fixed_precondition_text, '',
+      combine_text([I18n.t('step.click_delete_button', num: '1'), I18n.t('step.click_cancel_button', num: '2'),
+                    I18n.t('step.click_cancel_button_double', num: '3')]),
+      combine_text([I18n.t('result.open_delete_confirm_modal', num: '1'),
+                    I18n.t('result.close_delete_confirm_modal', num: '2'),
+                    I18n.t('result.delete_cancel', num: '3', function_name: FUNCTION_NAME_HASH[function_name])]),
       version
     ]
-    csv << [
-      '削除', '削除', precondition_text, '',
-      combine_text(['1. 「削除」ボタンをクリックする。', '2. 「削除」ボタンをクリックする。']),
-      combine_text(['1. 削除確認モーダルが表示されること。',
-                    "2. 削除が実行され、#{FUNCTION_NAME_HASH[function_name]}一覧画面へ遷移すること。このとき、削除対象のデータが存在していないこと。"]),
+  end
+
+  def add_delete_execute(function_name, fixed_precondition_text, version)
+    [
+      I18n.t('section.delete'), I18n.t('title.delete'), fixed_precondition_text, '',
+      combine_text([I18n.t('step.click_delete_button', num: '1'), I18n.t('step.click_delete_button', num: '2')]),
+      combine_text([I18n.t('result.open_delete_confirm_modal', num: '1'),
+                    I18n.t('result.delete_success', num: '2', function_name: FUNCTION_NAME_HASH[function_name])]),
       version
     ]
   end

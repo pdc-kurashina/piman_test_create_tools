@@ -2,13 +2,13 @@ AllCops:
   Exclude:
     - "Gemfile"
     - "Gemfile.lock"
-    - "db_schema.rb"
-    - "set_application_settings.rb"
+    - "config/create_markdown_schema_settings/db_schema.rb"
+    - "config/create_test_settings/set_application_settings.rb"
 
   TargetRubyVersion: 3.0.6
 
 Metrics/ClassLength:
-  Max: 200
+  Enabled: false
 
 Metrics/MethodLength:
   Max: 25

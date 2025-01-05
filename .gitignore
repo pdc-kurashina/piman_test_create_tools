@@ -1,8 +1,8 @@
 # test_create_tools
-settings.yml
+config/create_test_settings/settings.yml
 output.csv
-set_application_settings.rb
+config/create_test_settings/set_application_settings.rb
 
 # create_markdown_schema
-db_schema.rb
+config/create_markdown_schema_settings/db_schema.rb
 schema_tables.md
