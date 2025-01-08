@@ -1,0 +1,20 @@
+# テーブル名:
+#   フィールド名:
+#     call: 呼び方
+#     input_type: 入力形式
+#     require: true or false or case
+#     max: 最大文字数
+#     other: 指定の形式（半角英数字）
+#     case: 'require: case'の場合のみ自由記述
+
+customers:
+  customer_name:
+    call: "顧客名"
+    input_type: "text"
+    require: true
+    max: 100
+  note:
+    call: "備考"
+    input_type: "text"
+    require: false
+    max: 1000
