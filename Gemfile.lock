@@ -36,6 +36,7 @@ GEM
 PLATFORMS
   arm64-darwin-23
   ruby
+  x64-mingw-ucrt
 
 DEPENDENCIES
   i18n
@@ -43,4 +44,4 @@ DEPENDENCIES
   thor
 
 BUNDLED WITH
-   2.6.2
+   2.5.22
