@@ -6,6 +6,17 @@
 #     max: 最大文字数
 #     other: 指定の形式（半角英数字）
 #     case: 'require: case'の場合のみ自由記述
+#     test_data: テストデータ  （全てのテストデータに必要な場合は「test_data」とします。）
+#     test_data_precondition: テストデータの前提条件（全てのテストデータに必要な場合は「test_data_precondition」とします。）
+#     test_data_1: テストデータ1   （特定のテストデータにのみ必要な場合は「test_data_<数字>」とします。）
+#     test_data_2: テストデータ2
+#     test_data_1_precondition: テストデータ1の前提条件
+#     test_data_2_precondition: テストデータ2の前提条件
+
+# require: caseの場合の記述方法は以下の通り
+# case: "XXXXXXXXXXXXの場合は、YYYYYYYYYYYY"
+# XXXXXXXXXXXX: 条件
+# YYYYYYYYYYYY: 必須 or 任意
 
 customers:
   customer_name:
@@ -13,8 +24,15 @@ customers:
     input_type: "text"
     require: true
     max: 100
+    test_data: "試験用顧客A"
+  customer_number:
+    require: case
+    case: "ログインユーザが管理者の場合のみ、任意"
+    other: "半角英数字のみ"
+    test_data_1: "test01"
   note:
     call: "備考"
     input_type: "text"
     require: false
     max: 1000
+    test_data: "試験用備考"
