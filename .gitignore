@@ -4,6 +4,7 @@ output.csv
 config/create_test_settings/set_application_settings.rb
 config/create_test_settings/form_items.yml
 config/create_test_settings/function_mapping.yml
+config/create_test_settings/define_user.yml
 
 # csv_to_html
 output.html
