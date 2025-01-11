@@ -14,11 +14,15 @@ ja:
     update: "更新"
     delete: "削除"
     cancel: "キャンセル"
+  label:
+    required: "必須"
   section:
     display: "表示"
     create: "新規登録"
     update: "更新"
     delete: "削除"
+    new_validation: "新規登録バリデーション"
+    edit_validation: "編集バリデーション"
   title:
     display: "表示"
     create: "登録"
@@ -36,6 +40,8 @@ ja:
     moved_place_show: "設置先閲覧画面へ遷移していること。"
   step:
     input: "%{num}. 備考の表に沿ってデータを入力し、「%{button_name}」ボタンをクリックする。"
+    input_presence: "%{num}. 備考の表に沿ってデータを入力し、「%{button_name}」ボタンをクリックする。ただし、%{field_name}は未入力・未選択のままにする。"
+    input_case_presence: "%{num}. 備考の表に沿ってデータを入力し、「%{button_name}」ボタンをクリックする。ただし、%{case_condition}であること。また、%{field_name}は未入力・未選択のままにする。"
     click_record: "%{num}. 予め登録しておいたデータの行をクリックする。"
     click_button: "%{num}. 「%{button_name}」ボタンをクリックする。"
     click_left_menu: "%{num}. 左メニューの「%{function_name}」をクリックする。"
@@ -45,6 +51,7 @@ ja:
     click_cancel_button_double: "%{num}. キャンセルボタンを2回クリックする。"
   result:
     input_success: "%{num}. 正常に%{button_name}され、%{function_name}閲覧画面へ遷移すること。この時、入力した内容が表示されていること。"
+    input_error: "%{num}. 入力エラーが発生し、エラーメッセージが表示されること。"
     create_input_check: "%{num}. %{function_name}一覧画面へ遷移すること。この時、登録したデータが一覧テーブルに表示されていること。"
     duplicate_input_check: "%{num}. %{function_name}一覧画面へ遷移すること。この時、複製元のデータと複製したデータが一覧テーブルに表示されていること。"
     update_input_check: "%{num}. %{function_name}一覧画面へ遷移すること。この時、更新したデータが一覧テーブルに表示されていること。"
@@ -57,3 +64,16 @@ ja:
     delete_success: "%{num}. 削除が実行され、%{function_name}一覧画面へ遷移すること。この時、削除対象のデータが存在していないこと。"
   html_title: "試験仕様書"
   convert_success: "%{html_file}を作成しました。"
+  user:
+    admin: "管理者"
+    maintenance: "保守ユーザ"
+    sales: "営業ユーザ"
+    se: "SEユーザ"
+    media: "メディアユーザ"
+    read_only: "一般ユーザ"
+    call_center: "コールセンターユーザ"
+    partner: "パートナーユーザ"
+    pdc_call_center: "PDCコールセンターユーザ"
+    customer: "カスタマーポータルユーザ"
+    operator: "配信（オペレータ）ユーザ"
+    broadcast_admin: "配信（管理者）ユーザ"
