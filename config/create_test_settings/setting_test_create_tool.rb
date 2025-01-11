@@ -4,7 +4,11 @@ require 'optparse'
 
 module SettingTestCreateTool
   def self.set_paths
-    { yml_path: 'config/create_test_settings/settings.yml', csv_path: 'output.csv' }
+    {
+      yml_path: 'config/create_test_settings/settings.yml',
+      form_items_yml_path: 'config/create_test_settings/form_items.yml',
+      csv_path: 'output.csv'
+    }
   end
 
   def self.set_options
