@@ -65,5 +65,4 @@ module SetApplicationSettings
       YAML.load_file(File.join(__dir__, 'define_user.yml'))
     end
   end
-  end
 end
