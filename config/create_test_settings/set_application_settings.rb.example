@@ -7,7 +7,10 @@ module SetApplicationSettings
 
   # 通常、試験を行うユーザを指定
   def self.default_test_user
-    'YYYユーザ'
+    users = get_define_user
+    users.each do |key, value|
+      return value['call'] if value['default'] == true
+    end
   end
 
   # 特定の機能で試験を行うユーザを指定する場合に使用
@@ -49,9 +52,17 @@ module SetApplicationSettings
 
   # ユーザータイプの配列を取得
   def self.set_user_type_array
-    [
-      { admin: '管理者' }
-      { normal: '一般ユーザ' }
-    ]
+    users = get_define_user
+    users.map do |key, value|
+      { key.to_sym => value['call'] }
+    end
+  end
+
+  class << self
+    private
+
+    def get_define_user
+      YAML.load_file(File.join(__dir__, 'define_user.yml'))
+    end
   end
 end
