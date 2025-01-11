@@ -1,11 +1,18 @@
 # 不要な場合はメソッドと定数を削除する
 module SetApplicationSettings
+  # 試験対象のアプリケーション名を設定
   def self.set_application_name
     'XXXXXX'
   end
 
+  # 通常、試験を行うユーザを指定
   def self.default_test_user
-    'YYYYYYY'
+    'YYYユーザ'
+  end
+
+  # 特定の機能で試験を行うユーザを指定する場合に使用
+  def self.default_sub_test_user_map
+    YAML.load_file(File.join(__dir__, 'function_mapping.yml'))
   end
 
   # すべての機能名を取得
