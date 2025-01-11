@@ -1,0 +1,10 @@
+# ユーザ種別を定義します。
+# これを定義することによって、権限チェックの試験手順が自動作成されます。
+# このとき、default が true に指定するユーザは1つだけにしてください。
+
+admin:
+  call: "管理者"
+  default: true
+read_only:
+  call: "一般ユーザ"
+  default: false
