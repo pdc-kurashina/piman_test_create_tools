@@ -12,10 +12,7 @@ module SetApplicationSettings
 
   # 特定の機能で試験を行うユーザを指定する場合に使用
   def self.default_sub_test_user_map
-    {
-      'customers': 'AAAユーザ',
-      'users': 'BBBユーザ'
-    }
+    YAML.load_file(File.join(__dir__, 'function_mapping.yml'))
   end
 
   # すべての機能名を取得
