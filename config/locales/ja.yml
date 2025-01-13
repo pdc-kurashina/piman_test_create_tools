@@ -38,6 +38,9 @@ ja:
     before_create_data: "備考の表をもとにデータを登録していること。"
     moved_customer_show: "顧客閲覧画面へ遷移していること。"
     moved_place_show: "設置先閲覧画面へ遷移していること。"
+  note:
+    precondition_data: "以下はあらかじめ作成しておく必要のあるデータです。"
+    test_data: "以下はテスト入力データです。"
   step:
     input: "%{num}. 備考の表に沿ってデータを入力し、「%{button_name}」ボタンをクリックする。"
     input_presence: "%{num}. 備考の表に沿ってデータを入力し、「%{button_name}」ボタンをクリックする。ただし、%{field_name}は未入力・未選択のままにする。"

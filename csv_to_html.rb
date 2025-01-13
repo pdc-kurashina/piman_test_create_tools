@@ -24,7 +24,6 @@ class CsvToHtml
       file.puts html_template
       file.puts body_template
 
-      # ヘッダー行 (列名) を <th> タグとして出力
       @rows.headers.each do |header|
         file.puts "            <th>#{header}</th>"
       end
@@ -35,7 +34,6 @@ class CsvToHtml
         <tbody>
       HTML
 
-      # CSV の本文 (2行目以降) を <td> タグとして出力
       @rows.each do |row|
         file.puts '          <tr>'
         row.fields.each do |field|
@@ -44,10 +42,10 @@ class CsvToHtml
         file.puts '          </tr>'
       end
 
-      # HTML 閉じタグ
       file.puts <<~HTML
-            </tbody>
-          </table>
+              </tbody>
+            </table>
+          </div>
         </body>
         </html>
       HTML
@@ -66,8 +64,8 @@ class CsvToHtml
         <style>
           table {
             border-collapse: collapse;
-            width: 100%;
             margin: 1em 0;
+            min-width: 800px;
           }
           th, td {
             border: 1px solid #ccc;
@@ -75,6 +73,9 @@ class CsvToHtml
           }
           th {
             background: #f2f2f2;
+          }
+          .table-container {
+            overflow-x: auto;
           }
         </style>
       </head>
@@ -86,9 +87,10 @@ class CsvToHtml
       <br>
       <body>
         <h1>#{I18n.t('html_title')}</h1>
-        <table>
-          <thead>
-            <tr>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
     BODY
   end
 end
