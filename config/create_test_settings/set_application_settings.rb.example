@@ -1,11 +1,21 @@
 # 不要な場合はメソッドと定数を削除する
 module SetApplicationSettings
+  # 試験対象のアプリケーション名を設定
   def self.set_application_name
     'XXXXXX'
   end
 
+  # 通常、試験を行うユーザを指定
   def self.default_test_user
-    'YYYYYYY'
+    users = get_define_user
+    users.each do |key, value|
+      return value['call'] if value['default'] == true
+    end
+  end
+
+  # 特定の機能で試験を行うユーザを指定する場合に使用
+  def self.default_sub_test_user_map
+    YAML.load_file(File.join(__dir__, 'function_mapping.yml'))
   end
 
   # すべての機能名を取得
@@ -42,9 +52,17 @@ module SetApplicationSettings
 
   # ユーザータイプの配列を取得
   def self.set_user_type_array
-    [
-      { admin: '管理者' }
-      { normal: '一般ユーザ' }
-    ]
+    users = get_define_user
+    users.map do |key, value|
+      { key.to_sym => value['call'] }
+    end
+  end
+
+  class << self
+    private
+
+    def get_define_user
+      YAML.load_file(File.join(__dir__, 'define_user.yml'))
+    end
   end
 end

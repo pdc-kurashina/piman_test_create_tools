@@ -1,0 +1,14 @@
+# このファイルには、コマンド実行時に`--f`オプションで指定された機能名によって、
+# `config/create_test_settings/form_items.yml`のどの項目を使うかと試験実施時のデフォルトログインユーザを指定します。
+
+# 記述方法
+# `--f`オプションで指定される機能名:
+#   form_items.ymlのどの項目を使うか: デフォルトログインユーザの名称
+
+# 例のように分岐がなくても、`SetApplicationSettings.default_test_user`で指定したユーザ以外を使用したい場合に使用できます。
+
+inquiries:
+  admin/inquiries: "管理者ユーザ"
+  customer_portal/inquiries: "カスタマーポータルユーザ"
+test_functions:
+  test_functions: "検証用ユーザ"
