@@ -4,30 +4,26 @@ require 'pathname'
 
 class CreateMarkdownSchema
   def main
-    # mainメソッドの内容
-  end
+    schema_path = 'db_schema.rb'
+    output_path = 'schema_tables.md'
 
-  # 他のメソッド
-  def parse_schema(schema_content)
-    # parse_schemaメソッドの内容
-  end
+    unless File.exist?(schema_path)
+      puts "File not found: #{schema_path}"
+      exit 1
+    end
 
-  def column_element(col_name, col_type, options_str)
-    # column_elementメソッドの内容
-  end
+    schema_content = File.read(schema_path)
 
-  def parse_constraints(options_str)
-    # parse_constraintsメソッドの内容
-  end
+    # スキーマからテーブル情報をパース
+    tables = parse_schema(schema_content)
 
-  def generate_markdown(tables)
-    # generate_markdownメソッドの内容
-  end
+    # テーブル情報をMarkdown形式で出力
+    markdown = generate_markdown(tables)
 
-  def format_column_type(col_type, remarks)
-    # format_column_typeメソッドの内容
+    # ファイルに書き込む
+    File.write(output_path, markdown)
+    puts "Markdown file generated: #{output_path}"
   end
-end  # <-- このendがクラスの終了
 
 
   private
@@ -122,10 +118,12 @@ end  # <-- このendがクラスの終了
     }
 
     lines = []
-    lines << "| 物理カラム名 | 論理カラム名 | 型 | 長さ | NOT NULL | Primary Key | 備考 |"
-    lines << "| --- | --- | --- | --- | --- | --- | --- |"
 
     tables.each do |table|
+      lines << ""
+      lines << "## #{table[:table_name]}テーブル "
+      lines << "| 物理カラム名 | 論理カラム名 | 型 | 長さ | NOT NULL | Primary Key | 備考 |"
+      lines << "| --- | --- | --- | --- | --- | --- | --- |"
       table[:columns].each do |col|
         col_name = col[:name]
         logical_name = logical_column_names[col_name] || 'N/A'
@@ -161,6 +159,7 @@ end  # <-- このendがクラスの終了
       col_type.upcase
     end
   end
+end
 
 
 
