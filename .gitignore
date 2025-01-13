@@ -10,5 +10,6 @@ config/create_test_settings/define_user.yml
 output.html
 
 # create_markdown_schema
+config/create_markdown_schema_settings/column_name.yml
 config/create_markdown_schema_settings/db_schema.rb
 schema_tables.md

@@ -1,10 +1,11 @@
 # frozen_string_literal: true
 
 require 'pathname'
+require 'yaml'
 
 class CreateMarkdownSchema
   def main
-    schema_path = 'db_schema.rb'
+    schema_path = 'config/create_markdown_schema_settings/db_schema.rb'
     output_path = 'schema_tables.md'
 
     unless File.exist?(schema_path)
@@ -104,18 +105,7 @@ class CreateMarkdownSchema
 
   def generate_markdown(tables)
     # 論理カラム名のマッピング（例として一部を追加）
-    logical_column_names = {
-      'id' => 'ID',
-      'name' => '顧客名',
-      'kana' => '顧客名（かな）',
-      'note' => '備考',
-      'created_user_id' => '作成者',
-      'updated_user_id' => '更新者',
-      'created_at' => '作成日時',
-      'updated_at' => '更新日時',
-      'supplier' => '直接取引先',
-      'cancelled' => '解約済み'
-    }
+    logical_column_names = YAML.load_file("config/create_markdown_schema_settings/column_names.yml")
 
     lines = []
 
@@ -126,7 +116,7 @@ class CreateMarkdownSchema
       lines << "| --- | --- | --- | --- | --- | --- | --- |"
       table[:columns].each do |col|
         col_name = col[:name]
-        logical_name = logical_column_names[col_name] || 'N/A'
+        logical_name = logical_column_names[table[:table_name]][col_name] || 'N/A'
         col_type = format_column_type(col[:type], col[:constraints][:remarks])
         col_length = col_type.include?('VARCHAR') ? col[:constraints][:remarks][/(?<=limit=)\d+/] || 'ー' : 'ー'
         not_null = col[:constraints][:not_null] ? '○' : 'ー'
