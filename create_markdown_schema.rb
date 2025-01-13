@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
 require 'pathname'
+require 'yaml'
 
 class CreateMarkdownSchema
   def main
-    # コマンドライン引数からファイルパスを取得
-    schema_path = 'db_schema.rb'
+    schema_path = 'config/create_markdown_schema_settings/db_schema.rb'
     output_path = 'schema_tables.md'
 
     unless File.exist?(schema_path)
@@ -25,6 +25,7 @@ class CreateMarkdownSchema
     File.write(output_path, markdown)
     puts "Markdown file generated: #{output_path}"
   end
+
 
   private
 
@@ -72,54 +73,85 @@ class CreateMarkdownSchema
   end
 
   def parse_constraints(options_str)
-    return '' if options_str.nil? || options_str.strip.empty?
+    return { not_null: false, primary_key: false, remarks: '' } if options_str.nil? || options_str.strip.empty?
 
-    constraints = []
+    constraints = {
+      not_null: false,
+      primary_key: false,
+      remarks: ''.dup  # 空文字列をdupで複製して変更可能にする
+    }
 
     pattern_map = {
-      /null:\s*(false|true)/ => ->(val) { val == 'false' ? 'NOT NULL' : 'NULL' },
-      /default:\s*([^,]+)/ => ->(val) { "default=#{val}" },
-      /limit:\s*([^,]+)/ => ->(val) { "limit=#{val}" },
-      /precision:\s*([^,]+)/ => ->(val) { "precision=#{val}" },
-      /scale:\s*([^,]+)/ => ->(val) { "scale=#{val}" }
-      # 例: unique: true にも対応したいならここに追加
-      # /unique:\s*(true|false)/ => ->(val) { "unique=#{val}" },
+      /null:\s*(false|true)/ => ->(val) { constraints[:not_null] = val == 'false' },
+      /default:\s*([^,]+)/ => ->(val) { constraints[:remarks] << "default=#{val}, " },
+      /limit:\s*([^,]+)/ => ->(val) { constraints[:remarks] << "limit=#{val}, " },
+      /precision:\s*([^,]+)/ => ->(val) { constraints[:remarks] << "precision=#{val}, " },
+      /scale:\s*([^,]+)/ => ->(val) { constraints[:remarks] << "scale=#{val}, " },
+      /primary_key:\s*(true|false)/ => ->(val) { constraints[:primary_key] = val == 'true' }
     }
 
     pattern_map.each do |regex, converter|
       if options_str =~ regex
         match_value = Regexp.last_match(1).strip
-        constraints << converter.call(match_value)
+        converter.call(match_value)
       end
     end
 
-    constraints.join(', ')
+    constraints[:remarks].strip!
+    constraints[:remarks].chomp!(',')
+
+    constraints
   end
 
   def generate_markdown(tables)
+    # 論理カラム名のマッピング（例として一部を追加）
+    logical_column_names = YAML.load_file("config/create_markdown_schema_settings/column_names.yml")
+
     lines = []
 
-    lines << "# Schema Information\n\n"
-
     tables.each do |table|
-      lines << "## Table: `#{table[:table_name]}`\n"
-      lines << '| Column Name | Type | Constraints |'
-      lines << '|-------------|------|-------------|'
-
+      lines << ""
+      lines << "## #{table[:table_name]}テーブル "
+      lines << "| 物理カラム名 | 論理カラム名 | 型 | 長さ | NOT NULL | Primary Key | 備考 |"
+      lines << "| --- | --- | --- | --- | --- | --- | --- |"
       table[:columns].each do |col|
         col_name = col[:name]
-        col_type = col[:type]
-        col_constraints = col[:constraints]
+        logical_name = logical_column_names[table[:table_name]][col_name] || 'N/A'
+        col_type = format_column_type(col[:type], col[:constraints][:remarks])
+        col_length = col_type.include?('VARCHAR') ? col[:constraints][:remarks][/(?<=limit=)\d+/] || 'ー' : 'ー'
+        not_null = col[:constraints][:not_null] ? '○' : 'ー'
+        primary_key = col[:constraints][:primary_key] ? '○' : 'ー'
+        remarks = col[:constraints][:remarks].gsub(/limit=\d+,?/, '').strip
 
-        lines << "| `#{col_name}` | `#{col_type}` | #{col_constraints} |"
+        lines << "| #{col_name} | #{logical_name} | #{col_type} | #{col_length} | #{not_null} | #{primary_key} | #{remarks} |"
       end
-
-      lines << "\n"
     end
 
     lines.join("\n")
   end
+
+  def format_column_type(col_type, remarks)
+    case col_type.downcase
+    when 'string'
+      # VARCHARの長さをremarksから取得し、適切に表示する
+      if remarks =~ /limit=(\d+)/
+        "VARCHAR(#{$1})"
+      else
+        'VARCHAR'
+      end
+    when 'integer'
+      'INT'
+    when 'datetime'
+      'DATETIME'
+    when 'boolean'
+      'INT'  # BOOLEAN型をINTで表現するように変更
+    else
+      col_type.upcase
+    end
+  end
 end
+
+
 
 # スクリプト実行
 CreateMarkdownSchema.new.main if __FILE__ == $PROGRAM_NAME

@@ -1,0 +1,5 @@
+customer_managers:
+  customer_id: "顧客ID"
+customers:
+  name: "顧客名"
+  note: "備考"
