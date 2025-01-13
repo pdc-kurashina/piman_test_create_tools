@@ -13,3 +13,6 @@ output.html
 config/create_markdown_schema_settings/column_name.yml
 config/create_markdown_schema_settings/db_schema.rb
 schema_tables.md
+
+# other
+.DS_Store
