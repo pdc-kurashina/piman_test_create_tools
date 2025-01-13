@@ -45,6 +45,7 @@ class SetCreateTestToolSetting
   ::USER_TYPE_ARRAY = SetApplicationSettings.set_user_type_array
 end
 
+# 共通モジュール
 module CommonTools
   def combine_text(args)
     args.join('<br>')
@@ -59,9 +60,12 @@ class GetPermissions
   end
 end
 
+# フォームの項目データを取得
 class GetFormItems
   def self.get_form_items(yml_path, function_name)
     data = YAML.load_file(yml_path)
+    return data if function_name.nil?
+
     form_items_data = data[function_name]
     form_items_data_array = []
     if data[function_name].nil?
@@ -82,12 +86,11 @@ class GetFormItems
   end
 end
 
+# バリデーション試験を生成するクラス
 class CreateValidationTest
   include CommonTools
 
-  def generate_validation_test(yml_path, option_params, fixed_precondition_text)
-    form_items_data_array = GetFormItems.get_form_items(yml_path, option_params[0])
-
+  def generate_validation_test(form_items_data_array, option_params, fixed_precondition_text, note)
     validation_test_array = []
 
     form_items_data_array.each do |form_items_data|
@@ -95,11 +98,13 @@ class CreateValidationTest
       case option_params[1]
       when I18n.t('display.new'), I18n.t('display.duplicate')
         form_items_data[:data].each_value do |value|
-          validation_test_array << new_validate_test_spec(login_user, value, fixed_precondition_text, option_params)
+          validation_test_array << new_validate_test_spec(login_user, value, fixed_precondition_text, note,
+                                                          option_params)
         end
       when I18n.t('display.edit')
         form_items_data[:data].each_value do |value|
-          validation_test_array << edit_validate_test_spec(login_user, value, fixed_precondition_text, option_params)
+          validation_test_array << edit_validate_test_spec(login_user, value, fixed_precondition_text, note,
+                                                           option_params)
         end
       end
     end
@@ -108,10 +113,12 @@ class CreateValidationTest
 
   private
 
-  def new_validate_test_spec(login_user, value, fixed_precondition_text, option_params)
+  def new_validate_test_spec(login_user, value, fixed_precondition_text, note, option_params)
+    return if value.class != Hash
+
     display_login_user = login_user.empty? ? I18n.t('user.maintenance') : login_user
     fixed_precondition_text = fixed_precondition_text.gsub('#$%&#$%&', display_login_user)
-    base_array = [I18n.t('section.new_validation'), value['call'], fixed_precondition_text, '', '', '',
+    base_array = [I18n.t('section.new_validation'), value['call'], fixed_precondition_text, note, '', '',
                   option_params[2]]
     if value['require'] == true
       require_true_test(base_array, value, option_params, 'create')
@@ -123,10 +130,12 @@ class CreateValidationTest
     base_array
   end
 
-  def edit_validate_test_spec(login_user, value, fixed_precondition_text, option_params)
+  def edit_validate_test_spec(login_user, value, fixed_precondition_text, note, option_params)
+    return if value.class != Hash
+
     display_login_user = login_user.empty? ? I18n.t('user.maintenance') : login_user
     fixed_precondition_text = fixed_precondition_text.gsub('#$%&#$%&', display_login_user)
-    base_array = [I18n.t('section.edit_validation'), value['call'], fixed_precondition_text, '', '', '',
+    base_array = [I18n.t('section.edit_validation'), value['call'], fixed_precondition_text, note, '', '',
                   option_params[2]]
     if value['require'] == true
       require_true_test(base_array, value, option_params, 'update')
@@ -173,12 +182,13 @@ class CreateValidationTest
   end
 end
 
+# テスト仕様書を生成するクラス
 class CreateTest
   include CommonTools
 
   # テスト仕様書を生成するメソッド
   def generate_test_spec(yml_path, csv_path, form_items_yml_path, option_params)
-    permissions_data = GetPermissions.get_permissions(yml_path)
+    yml_datas = get_yml_datas(yml_path, form_items_yml_path, option_params)
 
     menu_tab_array = get_menu_tab_array(option_params)
 
@@ -191,26 +201,24 @@ class CreateTest
       menu_tab_array.each_with_index do |is_creatable, order|
         next unless is_creatable
 
-        USER_TYPE_ARRAY.each do |user_type|
-          csv << display_test_spec(user_type, option_params, menu_tab_array, order, permissions_data)
-        end
+        all_user_type_display_test(csv, option_params, menu_tab_array, order, yml_datas)
 
-        case option_params[1]
-        when I18n.t('display.new')
-          new_test_spec(csv, option_params, fixed_precondition_text, login_users)
-        when I18n.t('display.duplicate')
-          duplicate_test_spec(csv, option_params, fixed_precondition_text, login_users)
-        when I18n.t('display.edit')
-          edit_test_spec(csv, option_params, fixed_precondition_text, login_users)
-          generate_destroy(csv, option_params[0], option_params[2])
+        if [I18n.t('display.new'), I18n.t('display.duplicate'), I18n.t('display.edit')].include?(option_params[1])
+          write_type_test_spec(csv, option_params, fixed_precondition_text, login_users, yml_datas)
         end
-
-        add_validation_test_spec(csv, form_items_yml_path, option_params, fixed_precondition_text)
       end
     end
   end
 
   private
+
+  def get_yml_datas(yml_path, form_items_yml_path, option_params)
+    [
+      GetPermissions.get_permissions(yml_path),
+      GetFormItems.get_form_items(form_items_yml_path, option_params[0]),
+      generate_note(form_items_yml_path, option_params)
+    ]
+  end
 
   def get_login_users(option_params)
     login_users = []
@@ -256,22 +264,42 @@ class CreateTest
     combine_text(precondition_text)
   end
 
-  def display_test_spec(user_type, option_params, menu_tab_array, order, permissions_data)
+  def all_user_type_display_test(csv, option_params, menu_tab_array, order, yml_datas)
+    USER_TYPE_ARRAY.each do |user_type|
+      csv << display_test_spec(user_type, option_params, menu_tab_array, order, yml_datas)
+    end
+  end
+
+  def display_test_spec(user_type, option_params, menu_tab_array, order, yml_datas)
     [
       I18n.t('section.display'), user_type.values.first,
-      generate_precondition(user_type, option_params[0], option_params[1], menu_tab_array, order), '',
+      generate_precondition(user_type, option_params[0], option_params[1], menu_tab_array, order), yml_datas[2],
       generate_step(option_params[0], option_params[1], menu_tab_array, order),
       generate_result(option_params[0], option_params[1],
-                      permissions_data[user_type.keys.first.to_s][option_params[0]]),
+                      yml_datas[0][user_type.keys.first.to_s][option_params[0]]),
       option_params[2]
     ]
   end
 
-  def new_test_spec(csv, option_params, fixed_precondition_text, login_users)
+  def write_type_test_spec(csv, option_params, fixed_precondition_text, login_users, yml_datas)
+    case option_params[1]
+    when I18n.t('display.new')
+      new_test_spec(csv, option_params, fixed_precondition_text, login_users, yml_datas[2])
+    when I18n.t('display.duplicate')
+      duplicate_test_spec(csv, option_params, fixed_precondition_text, login_users, yml_datas[2])
+    when I18n.t('display.edit')
+      edit_test_spec(csv, option_params, fixed_precondition_text, login_users, yml_datas[2])
+      generate_destroy(csv, option_params[0], option_params[2], yml_datas[2])
+    end
+
+    add_validation_test_spec(csv, yml_datas[1], option_params, fixed_precondition_text, yml_datas[2])
+  end
+
+  def new_test_spec(csv, option_params, fixed_precondition_text, login_users, note)
     login_users.each do |login_user|
       csv << [
         option_params[1], I18n.t('title.create'),
-        "#{fixed_precondition_text.gsub('#$%&#$%&', login_user)}#{I18n.t('precondition.before_create_data')}", '',
+        "#{fixed_precondition_text.gsub('#$%&#$%&', login_user)}#{I18n.t('precondition.before_create_data')}", note,
         combine_text([I18n.t('step.input', num: '1', button_name: I18n.t('button.create')),
                       I18n.t('step.click_button', num: '2', button_name: I18n.t('button.cancel'))]),
         combine_text([I18n.t('result.input_success', num: '1', button_name: I18n.t('button.create'),
@@ -283,11 +311,11 @@ class CreateTest
     end
   end
 
-  def duplicate_test_spec(csv, option_params, fixed_precondition_text, login_users)
+  def duplicate_test_spec(csv, option_params, fixed_precondition_text, login_users, note)
     login_users.each do |login_user|
       csv << [
         option_params[1], I18n.t('title.create'),
-        "#{fixed_precondition_text.gsub('#$%&#$%&', login_user)}#{I18n.t('precondition.before_create_data')}", '',
+        "#{fixed_precondition_text.gsub('#$%&#$%&', login_user)}#{I18n.t('precondition.before_create_data')}", note,
         combine_text([I18n.t('step.input', num: '1', button_name: I18n.t('button.duplicate')),
                       I18n.t('step.click_button', num: '2', button_name: I18n.t('button.cancel'))]),
         combine_text([I18n.t('result.input_success', num: '1', button_name: I18n.t('button.create'),
@@ -299,11 +327,11 @@ class CreateTest
     end
   end
 
-  def edit_test_spec(csv, option_params, fixed_precondition_text, login_users)
+  def edit_test_spec(csv, option_params, fixed_precondition_text, login_users, note)
     login_users.each do |login_user|
       csv << [
         option_params[1], I18n.t('title.update'),
-        "#{fixed_precondition_text.gsub('#$%&#$%&', login_user)}#{I18n.t('precondition.before_create_data')}", '',
+        "#{fixed_precondition_text.gsub('#$%&#$%&', login_user)}#{I18n.t('precondition.before_create_data')}", note,
         combine_text([I18n.t('step.input', num: '1', button_name: I18n.t('button.update')),
                       I18n.t('step.click_button', num: '2', button_name: I18n.t('button.cancel'))]),
         combine_text([I18n.t('result.input_success', num: '1', button_name: I18n.t('button.update'),
@@ -319,25 +347,10 @@ class CreateTest
   def generate_precondition(user_type, function_name, display_name, menu_tab_array, order)
     fixed_precondition_text = I18n.t('precondition.login', app_name: APP_NAME, test_user: user_type.values.first)
     precondition_display_text = "#{FUNCTION_NAME_HASH[function_name]}の#{precondition_display(display_name)}に遷移していること。"
-    case display_name
-    when I18n.t('display.index')
-      precondition_index(order, menu_tab_array, fixed_precondition_text, precondition_display_text)
-    when I18n.t('display.new'), I18n.t('display.duplicate'), I18n.t('display.edit')
-      precondition_other_than_index(order, menu_tab_array, fixed_precondition_text, precondition_display_text)
-    end
+    precondition(order, menu_tab_array, fixed_precondition_text, precondition_display_text)
   end
 
-  def precondition_index(order, menu_tab_array, fixed_precondition_text, precondition_display_text)
-    if order.zero? && menu_tab_array[0]
-      "#{fixed_precondition_text}#{precondition_display_text}"
-    elsif order == 1 && menu_tab_array[1]
-      "#{fixed_precondition_text}#{I18n.t('precondition.moved_customer_show')}"
-    elsif order == 2 && menu_tab_array[2]
-      "#{fixed_precondition_text}#{I18n.t('precondition.moved_place_show')}"
-    end
-  end
-
-  def precondition_other_than_index(order, menu_tab_array, fixed_precondition_text, precondition_display_text)
+  def precondition(order, menu_tab_array, fixed_precondition_text, precondition_display_text)
     base_text = fixed_precondition_text
     if order.zero? && menu_tab_array[0]
       base_text += "#{precondition_display_text}#{I18n.t('precondition.before_create_data')}"
@@ -359,6 +372,88 @@ class CreateTest
     when I18n.t('display.edit')
       I18n.t('display.show')
     end
+  end
+
+  # テスト仕様書の備考を生成するメソッド
+  def generate_note(form_items_yml_path, option_params)
+    data = GetFormItems.get_form_items(form_items_yml_path, nil)
+    target_function_form_items = data[option_params[0]]
+    precondition_tables = target_function_form_items['precondition_table']
+    return if precondition_tables.empty? || precondition_tables.nil?
+
+    note = note_precondition_data(precondition_tables, data)
+
+    if [I18n.t('display.new'), I18n.t('display.duplicate'), I18n.t('display.edit')].include?(option_params[1])
+      note << '<br>'
+      note << '以下はテスト入力データです。'
+
+      max_n = get_test_data_max_n(target_function_form_items)
+
+      note += if max_n.positive?
+                note_case_test_data(target_function_form_items, max_n)
+              else
+                note_standard_test_data(target_function_form_items)
+              end
+    end
+    note.join('<br>')
+  end
+
+  def note_precondition_data(precondition_tables, data)
+    note = [I18n.t('note.precondition_data')]
+    precondition_tables.each do |precondition_table|
+      precondition_data = data[precondition_table]
+      note << '<br>'
+      note << '|||:項目 |:値'
+
+      precondition_data.each_value do |value|
+        next if value.class != Hash
+        next if value['call'].nil?
+
+        note << "|| #{value['call']} | #{value['test_data']}"
+      end
+    end
+    note
+  end
+
+  def get_test_data_max_n(target_function_form_items)
+    target_function_form_items.values.select { |value| value.is_a?(Hash) }.flat_map do |value|
+      value.keys.select { |k| k =~ /^test_data_(\d+)$/ }.map { |k| k.gsub('test_data_', '').to_i }
+    end.max || 0
+  end
+
+  def note_case_test_data(target_function_form_items, max_n)
+    note = []
+    (1..max_n).each do |n|
+      title = "#{n}つ目"
+      note << "<br>#{title}"
+      note << '|||:項目 |:値'
+
+      target_function_form_items.each_value do |value|
+        next unless value.is_a?(Hash)
+        next if value['call'].nil?
+
+        test_data_key = "test_data_#{n}"
+        test_data = value[test_data_key] || value['test_data']
+
+        note << "|| #{value['call']} | #{test_data}"
+      end
+    end
+    note
+  end
+
+  def note_standard_test_data(target_function_form_items)
+    note = []
+    note << '|||:項目 |:値'
+
+    target_function_form_items.each_value do |value|
+      next unless value.is_a?(Hash)
+      next if value['call'].nil?
+
+      test_data = value['test_data']
+
+      note << "|| #{value['call']} | #{test_data}"
+    end
+    note
   end
 
   # テスト仕様書の手順を生成するメソッド
@@ -419,34 +514,36 @@ class CreateTest
   end
 
   def writable?(permissions)
+    return false if permissions.nil?
+
     permissions.include?('write') || permissions.include?('limit_write') ? true : false
   end
 
   # 編集画面での削除の試験を生成するメソッド
-  def generate_destroy(csv, function_name, version)
+  def generate_destroy(csv, function_name, version, note)
     precondition_text = [
       I18n.t('precondition.login', app_name: APP_NAME, test_user: DEFAULT_TEST_USER),
       I18n.t('precondition.display', function_name: FUNCTION_NAME_HASH[function_name],
                                      display_name: I18n.t('display.edit'))
     ]
     fixed_precondition_text = combine_text(precondition_text)
-    csv << add_delete_confirm_modal(fixed_precondition_text, version)
-    csv << add_delete_cancel(function_name, fixed_precondition_text, version)
-    csv << add_delete_execute(function_name, fixed_precondition_text, version)
+    csv << add_delete_confirm_modal(fixed_precondition_text, note, version)
+    csv << add_delete_cancel(function_name, fixed_precondition_text, note, version)
+    csv << add_delete_execute(function_name, fixed_precondition_text, note, version)
   end
 
-  def add_delete_confirm_modal(fixed_precondition_text, version)
+  def add_delete_confirm_modal(fixed_precondition_text, note, version)
     [
-      I18n.t('section.delete'), I18n.t('title.delete_confirm_modal'), fixed_precondition_text, '',
+      I18n.t('section.delete'), I18n.t('title.delete_confirm_modal'), fixed_precondition_text, note,
       combine_text([I18n.t('step.click_delete_button', num: '1')]),
       combine_text([I18n.t('result.open_delete_confirm_modal', num: '1')]),
       version
     ]
   end
 
-  def add_delete_cancel(function_name, fixed_precondition_text, version)
+  def add_delete_cancel(function_name, fixed_precondition_text, note, version)
     [
-      I18n.t('section.delete'), I18n.t('title.delete_cancel'), fixed_precondition_text, '',
+      I18n.t('section.delete'), I18n.t('title.delete_cancel'), fixed_precondition_text, note,
       combine_text([I18n.t('step.click_delete_button', num: '1'), I18n.t('step.click_cancel_button', num: '2'),
                     I18n.t('step.click_cancel_button_double', num: '3')]),
       combine_text([I18n.t('result.open_delete_confirm_modal', num: '1'),
@@ -456,9 +553,9 @@ class CreateTest
     ]
   end
 
-  def add_delete_execute(function_name, fixed_precondition_text, version)
+  def add_delete_execute(function_name, fixed_precondition_text, note, version)
     [
-      I18n.t('section.delete'), I18n.t('title.delete'), fixed_precondition_text, '',
+      I18n.t('section.delete'), I18n.t('title.delete'), fixed_precondition_text, note,
       combine_text([I18n.t('step.click_delete_button', num: '1'), I18n.t('step.click_delete_button', num: '2')]),
       combine_text([I18n.t('result.open_delete_confirm_modal', num: '1'),
                     I18n.t('result.delete_success', num: '2', function_name: FUNCTION_NAME_HASH[function_name])]),
@@ -466,10 +563,12 @@ class CreateTest
     ]
   end
 
-  def add_validation_test_spec(csv, form_items_yml_path, option_params, fixed_precondition_text)
-    validation_test_array = CreateValidationTest.new.generate_validation_test(form_items_yml_path, option_params,
-                                                                              fixed_precondition_text)
+  def add_validation_test_spec(csv, form_items_data_array, option_params, fixed_precondition_text, note)
+    validation_test_array = CreateValidationTest.new.generate_validation_test(form_items_data_array, option_params,
+                                                                              fixed_precondition_text, note)
     validation_test_array.each do |validation_test|
+      next if validation_test.nil?
+
       csv << validation_test
     end
   end

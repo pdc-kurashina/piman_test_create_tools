@@ -1,4 +1,5 @@
 # テーブル名:
+#   precondition_table: [前提条件として作成するデータのテーブル名を指定]
 #   フィールド名:
 #     call: 呼び方
 #     input_type: 入力形式
@@ -10,8 +11,6 @@
 #     test_data_precondition: テストデータの前提条件（全てのテストデータに必要な場合は「test_data_precondition」とします。）
 #     test_data_1: テストデータ1   （特定のテストデータにのみ必要な場合は「test_data_<数字>」とします。）
 #     test_data_2: テストデータ2
-#     test_data_1_precondition: テストデータ1の前提条件
-#     test_data_2_precondition: テストデータ2の前提条件
 
 # require: caseの場合の記述方法は以下の通り
 # case: "XXXXXXXXXXXXの場合は、YYYYYYYYYYYY"
@@ -19,6 +18,7 @@
 # YYYYYYYYYYYY: 必須 or 任意
 
 customers:
+  precondition_table: [customer_groups]
   customer_name:
     call: "顧客名"
     input_type: "text"
